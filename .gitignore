@@ -1,0 +1,11 @@
+# Heavy generated image sets (regenerate with: python main.py --input alien_image.png)
+output/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
