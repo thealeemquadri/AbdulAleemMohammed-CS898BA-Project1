@@ -1,0 +1,6 @@
+=== Part 2.1 - Original image per-channel statistics ===
+Channel    Min   Max     Mean  Median  Mode     Skew  Range      Std        Var
+-------------------------------------------------------------------------------
+Blue         0   255    20.87    10.0     3    1.690    255   25.975     674.73
+Green        0   255    23.69    15.0    11    1.778    255   21.924     480.67
+Red          0   255    19.64    11.0     2    2.137    255   22.158     490.99
