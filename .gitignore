@@ -9,3 +9,6 @@ venv/
 
 # OS
 .DS_Store
+
+# segmentation outputs (regenerate with: python segmentation.py --input alien_image.png)
+segmentation_output/
