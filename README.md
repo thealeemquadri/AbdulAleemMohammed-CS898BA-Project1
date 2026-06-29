@@ -146,7 +146,6 @@ dark original — a good follow-up experiment.
 ├── requirements.txt
 ├── .gitignore
 ├── AI_Log.md               # AI usage log
-├── Manual_Prompt_Guide.md  # per-section prompt reference
 ├── README.md
 ├── alien_image.png         # the assignment image
 ├── images/
