@@ -1,0 +1,6 @@
+=== Part 5 - Quantitative segmentation metrics (vs GrabCut pseudo-GT) ===
+Method         IoU (Jaccard)      Dice
+--------------------------------------
+otsu                  0.0952    0.1739
+adaptive              0.0961    0.1754
+kmeans                0.1032    0.1871
