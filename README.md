@@ -155,3 +155,107 @@ dark original — a good follow-up experiment.
 ├── results/                # 6 README plots + statistics.txt (committed)
 └── output/                 # 147 blurred + 210 edge images (git-ignored, regenerated on run)
 ```
+
+---
+
+# Homework Two — Image Segmentation
+
+Branch: `Feature-Segmentation`. Builds on the HW1 pipeline to isolate the figure
+from the background and measure how well each method does it.
+
+## Run
+
+```bash
+python segmentation.py --input alien_image.png
+```
+
+Full outputs go to `segmentation_output/` (git-ignored). The comparison plot,
+normalized image, ground truth, and metrics are committed to `results_hw2/`.
+
+## Part 2 — Multi-channel normalization
+
+Unlike HW1 (which equalized only the V channel of HSV), HW2 splits the image into
+its B, G, R channels and applies histogram equalization to **all three
+independently**, then merges them back. This maximizes contrast across the whole
+spectrum and pulls the figure and houses out of the dark. A known side effect:
+equalizing each channel independently breaks color constancy, which is why the
+normalized image takes on a slight purple/green cast — the per-channel stretch
+shifts the relative color balance. This normalized image is the input to every
+segmentation method below.
+
+## Part 3 — Threshold-based segmentation
+
+- **Otsu global threshold** on the grayscale of the normalized image — picks one
+  global cutoff automatically.
+- **Adaptive Gaussian threshold** — computes a local cutoff per neighborhood
+  (block size 31, C = 5).
+
+Binary masks and the foreground extractions (`foreground_otsu.png`,
+`foreground_adaptive.png`) are saved for both. Mask polarity is oriented so the
+figure region is the white class.
+
+## Part 4 — K-Means color clustering
+
+The normalized image is converted to HSV and clustered with K-Means. K is chosen
+automatically from {3, 4, 5} by silhouette score (K = 5 won). The cluster whose
+pixels are densest inside the figure's region is selected as the figure, giving
+`mask_kmeans.png` and `foreground_kmeans.png`.
+
+## Part 5 — Evaluation
+
+### Comparison plot
+
+![HW2 segmentation comparison](results_hw2/comparison_plot.png)
+
+### Quantitative results (vs the GrabCut pseudo-ground-truth)
+
+| Method | IoU (Jaccard) | Dice |
+| --- | --- | --- |
+| Otsu | 0.095 | 0.174 |
+| Adaptive | 0.096 | 0.175 |
+| **K-Means** | **0.103** | **0.187** |
+
+The pseudo-ground-truth was built with a seeded GrabCut on the normalized image
+(a vertical core of the figure marked as definite foreground, a wide border as
+definite background), producing a clean head-torso-legs silhouette to score
+against.
+
+### Qualitative analysis
+
+**Otsu** splits the frame into two big intensity regions. After full-spectrum
+normalization the grass and figure are no longer uniformly dark, so Otsu floods
+large background areas (sky, rooflines, parts of the lawn) as foreground. The
+figure is captured but buried in false positives, which is why its IoU is low.
+
+**Adaptive** thresholding responds to local contrast, so it traces texture and
+edges everywhere — roof shingles, grass blades, the figure's outline. It
+preserves the figure's contour better than Otsu but introduces heavy salt-and-
+pepper noise across the whole scene, again hurting IoU.
+
+**K-Means** is the best of the three (highest IoU and Dice). Because it clusters
+in HSV color space rather than on raw intensity, it groups the figure's muted
+clothing tones together and separates them from the green lawn and warm house
+lights more cleanly than either threshold method. It still leaks onto similarly
+colored background patches, so it is far from perfect.
+
+**Effect of multi-channel normalization vs HW1.** In HW1 the raw, dark image gave
+edge/threshold results dominated by noise and near-black regions. Equalizing all
+three channels here dramatically raised contrast and made every method produce a
+visible figure — but it also amplified background texture and shifted colors,
+which is a double-edged sword: better visibility, but more background clutter for
+the segmenters to wrongly include. The low absolute IoU values (~0.10) reflect
+the genuine difficulty: a low-light, motion-blurred figure whose tones overlap
+heavily with the dark grass is hard to isolate with classical methods. Color
+clustering's edge over pure thresholding is the key takeaway.
+
+## HW2 files
+
+```
+segmentation.py            # full Part 2–5 pipeline
+results_hw2/
+├── comparison_plot.png    # 6-panel comparison (in this README)
+├── normalized_color.png   # Part 2 normalized image
+├── ground_truth.png       # pseudo-ground-truth mask
+└── metrics.txt            # IoU / Dice table
+segmentation_output/       # all masks + foreground extractions (git-ignored)
+```
