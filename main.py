@@ -1,6 +1,5 @@
-"""
-CS 898BA - Image Analysis and Computer Vision
-Homework One
+""" CS 898BA - Image Analysis and Computer Vision
+Homework 1
 
 A single-script pipeline that:
   Part 2 - computes per-channel statistics, builds 7 base images
@@ -16,8 +15,7 @@ Usage:
 
 All outputs land in ./output/ which is git-ignored (regenerate by re-running).
 
-Author: Abdul Aleem Mohammed
-"""
+Author: Abdul Aleem Mohammed """
 
 import argparse
 import os
@@ -68,10 +66,8 @@ def ensure_dirs():
     for d in DIRS.values():
         os.makedirs(d, exist_ok=True)
 
-
-# ---------------------------------------------------------------------------
 # Part 2.1 - per-channel statistics
-# ---------------------------------------------------------------------------
+
 def print_channel_stats(img):
     """Print and save min, max, mean, median, mode, skew, range, std, variance per channel."""
     channels = cv2.split(img)
@@ -92,10 +88,8 @@ def print_channel_stats(img):
     with open(os.path.join(DIRS["readme_plots"], "statistics.txt"), "w") as f:
         f.write(report + "\n")
 
-
-# ---------------------------------------------------------------------------
 # Part 2.2-2.5 - build the 7 base images
-# ---------------------------------------------------------------------------
+
 def build_base_images(img):
     """Return an ordered dict-like list of (name, image) for the 7 base images."""
     grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -125,10 +119,8 @@ def build_base_images(img):
     print(f"Part 2.5 - saved {len(base)} base images -> expected 7")
     return base
 
-
-# ---------------------------------------------------------------------------
 # Part 2.6 - affine transforms (2 unique per image, 14 total)
-# ---------------------------------------------------------------------------
+
 def apply_affine(img, spec):
     h, w = img.shape[:2]
     center = (w / 2, h / 2)
@@ -159,11 +151,9 @@ def build_affine_images(base):
             images.append((label, warped))
     print(f"Part 2.7 - working set after affine = {len(images)} -> expected 21")
     return images
-
-
-# ---------------------------------------------------------------------------
+  
 # Part 2.8 - Gaussian blur (7 sigma levels per image)
-# ---------------------------------------------------------------------------
+
 def build_blur_images(images):
     """For each of the 21 images, produce 7 blurred copies -> 168 total."""
     working = list(images)  # the 21 carry forward into the total
@@ -175,11 +165,9 @@ def build_blur_images(images):
             working.append((label, out))
     print(f"Part 2.9 - total image set = {len(working)} (21 + 147 blurred) -> expected 168")
     return working
-
-
-# ---------------------------------------------------------------------------
+  
 # Part 3 - subsets + edge detection
-# ---------------------------------------------------------------------------
+
 def prewitt(grey):
     kx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]], dtype=np.float32)
     ky = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]], dtype=np.float32)
