@@ -1,0 +1,52 @@
+{
+  "model": "nvidia/segformer-b4-finetuned-ade-512-512",
+  "target_class": "person",
+  "metrics": {
+    "A": {
+      "iou": 0.426674373916168,
+      "dice": 0.5981384143670608,
+      "pixels": 41290
+    },
+    "B": {
+      "iou": 0.4310864137875493,
+      "dice": 0.6024603540838952,
+      "pixels": 38819
+    },
+    "C": {
+      "iou": 0.4352762098052895,
+      "dice": 0.606539991162174,
+      "pixels": 40490
+    }
+  },
+  "diagnostics": {
+    "A": {
+      "best_class_id": 12,
+      "best_class_name": "person",
+      "best_class_iou": 0.426674373916168
+    },
+    "B": {
+      "best_class_id": 12,
+      "best_class_name": "person",
+      "best_class_iou": 0.4310864137875493
+    },
+    "C": {
+      "best_class_id": 12,
+      "best_class_name": "person",
+      "best_class_iou": 0.4352762098052895
+    }
+  },
+  "hw2_baselines": {
+    "Otsu": [
+      0.0952,
+      0.1739
+    ],
+    "Adaptive": [
+      0.0961,
+      0.1754
+    ],
+    "K-Means": [
+      0.1032,
+      0.1871
+    ]
+  }
+}

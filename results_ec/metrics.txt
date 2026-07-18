@@ -1,0 +1,14 @@
+=== Extra Credit - SegFormer figure mask vs HW2 ground truth ===
+model: nvidia/segformer-b4-finetuned-ade-512-512
+target class: person
+
+Input                                    IoU      Dice
+------------------------------------------------------
+Channel A - original RGB              0.4267    0.5981
+Channel B - V-channel normalized      0.4311    0.6025
+Channel C - per-channel normalized    0.4353    0.6065
+
+Classical Homework 2 baselines on the same ground truth:
+Otsu (HW2)                            0.0952    0.1739
+Adaptive (HW2)                        0.0961    0.1754
+K-Means (HW2)                         0.1032    0.1871
