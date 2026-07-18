@@ -1,0 +1,19 @@
+=== Part 4 - Random Search over the 12-point hyperparameter grid ===
+(sampled 8 of 12 configurations, 10 epochs each, seed=898)
+
+rank         lr  batch  dropout   val_loss   val_acc
+----------------------------------------------------
+1         0.001     32      0.3     0.4154    0.8487
+2         0.001     32      0.5     0.4546    0.8487
+3         0.001     64      0.5     0.4768    0.7961
+4        0.0001     32      0.3     0.7273    0.7171
+5        0.0001     64      0.3     0.8562    0.6579
+6          0.01     64      0.3     0.9424    0.6447
+7          0.01     32      0.5     1.0570    0.6053
+8          0.01     64      0.5     1.1050    0.5987
+
+coverage -> learning rates: [0.0001, 0.001, 0.01]
+            batch sizes:    [32, 64]
+            dropout rates:  [0.3, 0.5]
+
+BEST (lowest validation loss): lr=0.001, batch=32, dropout=0.3  (val_loss=0.4154)

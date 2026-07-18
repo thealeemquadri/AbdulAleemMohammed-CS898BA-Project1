@@ -1,0 +1,19 @@
+=== Baseline - test-set classification report ===
+
+              precision    recall  f1-score   support
+
+        Bete     0.8261    0.6552    0.7308        29
+        Cray     0.7500    0.7500    0.7500        12
+     Discuss     0.9375    1.0000    0.9677        30
+        Gold     0.9394    1.0000    0.9688        31
+       Guppy     0.9000    0.9310    0.9153        29
+       Oscar     0.7391    0.7727    0.7556        22
+
+    accuracy                         0.8693       153
+   macro avg     0.8487    0.8515    0.8480       153
+weighted avg     0.8664    0.8693    0.8655       153
+
+Accuracy : 0.8693
+Precision (macro): 0.8487
+Recall    (macro): 0.8515
+F1-score  (macro): 0.8480

@@ -146,7 +146,6 @@ dark original — a good follow-up experiment.
 ├── requirements.txt
 ├── .gitignore
 ├── AI_Log.md               # AI usage log
-├── Manual_Prompt_Guide.md  # per-section prompt reference
 ├── README.md
 ├── alien_image.png         # the assignment image
 ├── images/
@@ -259,4 +258,193 @@ results_hw2/
 ├── ground_truth.png       # pseudo-ground-truth mask
 └── metrics.txt            # IoU / Dice table
 segmentation_output/       # all masks + foreground extractions (git-ignored)
+```
+
+---
+
+# Homework Three — Deep Learning for Fish Classification
+
+Branch: `Feature-Classification`. A custom CNN built from scratch in Keras that
+classifies six fish species, plus a systematic hyperparameter search.
+
+## Setup and run
+
+```bash
+pip install -r requirements.txt
+```
+
+Place the unpacked dataset in the repo root as `Fish/` (one folder per species),
+then:
+
+```bash
+python classification.py --data Fish
+```
+
+The dataset and the decoded image cache are git-ignored. Outputs go to
+`results_hw3/` and trained weights to `models/`. A fixed seed (`SEED = 898`)
+makes runs reproducible. Full run takes roughly 30 minutes on a single CPU core.
+
+## Part 2 — Data pipeline and augmentation
+
+The dataset holds **1,016 images across 6 classes**, and it is noticeably
+imbalanced:
+
+| Class | Bete | Cray | Discuss | Gold | Guppy | Oscar |
+| --- | --- | --- | --- | --- | --- | --- |
+| Images | 194 | 80 | 201 | 207 | 189 | 145 |
+
+Every image is decoded once, resized to **128 x 128**, and cached as an array so
+training is not bottlenecked on disk I/O. Pixels are normalized to **[0, 1]**.
+The data is split **70 / 15 / 15 stratified** (train 711, validation 152, test
+153), so every class keeps its proportion in all three sets.
+
+Augmentation is applied to the **training set only**: random horizontal flip,
+minor rotation (±6%), and brightness jitter (±15%).
+
+![Augmentation samples](results_hw3/augmentation_samples.png)
+
+## Part 3 — Baseline CNN
+
+Four convolutional blocks with increasing filters, each followed by max-pooling,
+then a dense head — **2,339,782 trainable parameters**:
+
+```
+Input 128x128x3
+Conv2D(32, 3x3, ReLU)  -> MaxPool
+Conv2D(64, 3x3, ReLU)  -> MaxPool
+Conv2D(128, 3x3, ReLU) -> MaxPool
+Conv2D(128, 3x3, ReLU) -> MaxPool
+Flatten -> Dense(256, ReLU) -> Dropout(0.3) -> Dense(6, softmax)
+```
+
+Trained with **Adam, learning rate 0.001, batch size 32, for a fixed 25 epochs**.
+It ended at 97.5% training accuracy against 88.8% validation accuracy (best
+validation accuracy 89.5%), which is a clear but moderate overfitting gap.
+Weights are saved to `models/baseline_model.keras`.
+
+## Part 4 — Hyperparameter optimization
+
+**Strategy: seeded Random Search** over a 12-point grid — learning rate
+{0.01, 0.001, 0.0001} × batch size {32, 64} × dropout {0.3, 0.5}. Eight of the
+twelve configurations were sampled (10 epochs each), and the sample covers all
+three learning rates, both batch sizes, and both dropout rates.
+
+| Rank | Learning rate | Batch | Dropout | Val loss | Val accuracy |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 0.001 | 32 | 0.3 | **0.4154** | 0.8487 |
+| 2 | 0.001 | 32 | 0.5 | 0.4546 | 0.8487 |
+| 3 | 0.001 | 64 | 0.5 | 0.4768 | 0.7961 |
+| 4 | 0.0001 | 32 | 0.3 | 0.7273 | 0.7171 |
+| 5 | 0.0001 | 64 | 0.3 | 0.8562 | 0.6579 |
+| 6 | 0.01 | 64 | 0.3 | 0.9424 | 0.6447 |
+| 7 | 0.01 | 32 | 0.5 | 1.0570 | 0.6053 |
+| 8 | 0.01 | 64 | 0.5 | 1.1050 | 0.5987 |
+
+The winning configuration on validation loss was **lr = 0.001, batch = 32,
+dropout = 0.3**. It was then retrained for up to 40 epochs with
+`ReduceLROnPlateau` and early stopping (patience 12, best weights restored); it
+ran 24 epochs and reached a peak validation accuracy of **90.1%**, saved to
+`models/optimized_model.keras`.
+
+## Part 5 — Evaluation and analysis
+
+### Visualization
+
+![Training curves and confusion matrix](results_hw3/training_comparison.png)
+
+### Quantitative comparison (held-out test set, 153 images)
+
+| Model | Accuracy | Precision (macro) | Recall (macro) | F1 (macro) |
+| --- | --- | --- | --- | --- |
+| Baseline | **0.8693** | 0.8487 | **0.8515** | **0.8480** |
+| Optimized | 0.8562 | **0.8544** | 0.8202 | 0.8311 |
+
+Per-class results for the optimized model:
+
+| Class | Precision | Recall | F1 | Support |
+| --- | --- | --- | --- | --- |
+| Bete | 0.7097 | 0.7586 | 0.7333 | 29 |
+| Cray | 0.8750 | 0.5833 | 0.7000 | 12 |
+| Discuss | 0.9667 | 0.9667 | 0.9667 | 30 |
+| Gold | 0.8857 | 1.0000 | 0.9394 | 31 |
+| Guppy | 0.9000 | 0.9310 | 0.9153 | 29 |
+| Oscar | 0.7895 | 0.6818 | 0.7317 | 22 |
+
+### Qualitative analysis
+
+**Effect of augmentation on training stability.** The horizontal flips and small
+rotations were the useful part of the augmentation set: fish appear facing either
+direction and at slight angles across the dataset, so those transforms match real
+variation rather than inventing it. Brightness jitter matters because the images
+come from aquarium tanks with very different lighting. The measurable effect is
+on the shape of the curves — validation accuracy climbs steadily instead of
+spiking and collapsing, and the training and validation curves stay close for the
+first ten epochs or so. What augmentation did **not** do is eliminate
+overfitting: training accuracy still reached 99% while validation plateaued near
+89%. With only 711 training images, a 2.3M-parameter network memorizes the
+training set regardless.
+
+**Which hyperparameters mattered.** Learning rate dominated everything else:
+
+- **lr = 0.001** — validation loss 0.415 to 0.477 (all top three trials)
+- **lr = 0.0001** — 0.727 to 0.856 (converging, but far too slowly for 10 epochs)
+- **lr = 0.01** — 0.942 to 1.105 (unstable; the loss bounced instead of descending)
+
+Batch size was second: batch 32 averaged 0.664 validation loss against 0.845 for
+batch 64. On a dataset this small, the smaller batch gives more than twice as
+many gradient updates per epoch, which matters when the epoch budget is fixed.
+Dropout mattered least — 0.3 averaged 0.735 against 0.773 for 0.5. At this model
+size, 0.5 removes enough signal to slow convergence without buying much
+generalization.
+
+**An honest note on the comparison.** The search found that the baseline's
+default configuration was *already* the best point in the grid, so the optimized
+model differs from the baseline only by its learning-rate schedule and early
+stopping rather than by different hyperparameters. On the test set the two land
+within 2 images of each other out of 153 (86.9% vs 85.6%), which is inside
+run-to-run noise for a test set this size; the optimized model is slightly ahead
+on macro precision and reached a higher peak validation accuracy (90.1% vs
+89.5%), while the baseline is slightly ahead on recall. The correct conclusion is
+not that tuning failed but that the standard Adam defaults were already near
+optimal for this architecture, and that the remaining error is a data problem
+rather than a hyperparameter problem.
+
+A useful failure worth recording: the first attempt at the optimized model used
+early stopping on validation loss with patience 8. It halted at epoch 10 and
+restored weights from that epoch, even though validation *accuracy* was still
+improving through epoch 14, so the model was truncated while undertrained and
+scored only 81.1% on the test set. Adding `ReduceLROnPlateau` and raising the
+patience to 12 fixed it. Validation loss is a noisier early-stopping signal than
+it looks.
+
+**Where the errors actually are.** The confusion matrix concentrates the mistakes
+in exactly the places the class distribution predicts. Gold (31/31) and Discuss
+(29/30) are nearly perfect — both have over 200 training images and a distinctive
+colour and body shape. Cray has the lowest recall at 0.583, and it is also the
+smallest class with only 80 images. Oscar is the other weak class, and five of
+its seven errors are predicted as Bete; both are dark, patterned, similarly
+shaped fish, so this is a genuine visual confusion rather than a training
+artifact.
+
+The clear next steps would be class weighting or oversampling for Cray, more data
+for the two weak classes, and transfer learning from a pretrained backbone, which
+would help far more than further tuning of these three hyperparameters.
+
+## HW3 files
+
+```
+classification.py             # full Part 2-5 pipeline
+models/
+├── baseline_model.keras      # Part 3 baseline weights
+└── optimized_model.keras     # Part 4 best configuration
+results_hw3/
+├── training_comparison.png   # curves for both models + confusion matrix
+├── augmentation_samples.png  # Part 2 augmentation evidence
+├── hyperparameter_search.txt # full random-search table
+├── metrics_summary.txt       # baseline vs optimized
+├── classification_report_baseline.txt
+├── classification_report_optimized.txt
+├── confusion_matrix_optimized.csv
+└── history.json              # per-epoch histories + trial records
+Fish/                         # dataset (git-ignored, add locally)
 ```

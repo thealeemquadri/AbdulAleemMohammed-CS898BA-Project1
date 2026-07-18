@@ -1,0 +1,11 @@
+=== Part 5 - Baseline vs Optimized (held-out test set) ===
+
+Model         Accuracy  Precision   Recall       F1
+---------------------------------------------------
+Baseline        0.8693     0.8487   0.8515   0.8480
+Optimized       0.8562     0.8544   0.8202   0.8311
+
+Baseline config : lr=0.001, batch=32, dropout=0.3 (25 epochs, fixed)
+Optimized config: lr=0.001, batch=32, dropout=0.3 (up to 40 epochs, early stopping)
+
+Precision / recall / F1 are macro-averaged across the 6 fish classes.
