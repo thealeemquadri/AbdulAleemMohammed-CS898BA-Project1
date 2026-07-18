@@ -1,0 +1,19 @@
+=== Optimized - test-set classification report ===
+
+              precision    recall  f1-score   support
+
+        Bete     0.7097    0.7586    0.7333        29
+        Cray     0.8750    0.5833    0.7000        12
+     Discuss     0.9667    0.9667    0.9667        30
+        Gold     0.8857    1.0000    0.9394        31
+       Guppy     0.9000    0.9310    0.9153        29
+       Oscar     0.7895    0.6818    0.7317        22
+
+    accuracy                         0.8562       153
+   macro avg     0.8544    0.8202    0.8311       153
+weighted avg     0.8562    0.8562    0.8525       153
+
+Accuracy : 0.8562
+Precision (macro): 0.8544
+Recall    (macro): 0.8202
+F1-score  (macro): 0.8311
